@@ -23,6 +23,14 @@ const JWT_EXPIRATION = '7d' // 7 days
 // Token refresh threshold (refresh if less than this time left)
 const REFRESH_THRESHOLD = 24 * 60 * 60 // 24 hours in seconds
 
+function isDynamicServerUsageError(error: unknown) {
+  return (
+    error instanceof Error &&
+    'digest' in error &&
+    error.digest === 'DYNAMIC_SERVER_USAGE'
+  )
+}
+
 // Hash a password
 export async function hashPassword(password: string) {
   return hash(password, 10)
@@ -127,6 +135,8 @@ export const getSession = cache(async () => {
 
     return payload ? { userId: payload.userId } : null
   } catch (error) {
+    if (isDynamicServerUsageError(error)) throw error
+
     // Handle the specific prerendering error
     if (
       error instanceof Error &&

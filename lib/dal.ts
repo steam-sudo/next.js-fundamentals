@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import { cache } from 'react'
 import { issues, users } from '@/db/schema'
 import { mockDelay } from './utils'
-import { unstable_cacheTag as cacheTag } from 'next/cache'
+import { unstable_cache } from 'next/cache'
 
 // Current user
 export const getCurrentUser = cache(async () => {
@@ -62,9 +62,7 @@ export async function getIssue(id: number) {
   }
 }
 
-export async function getIssues() {
-  'use cache'
-  cacheTag('issues')
+export const getIssues = unstable_cache(async () => {
   try {
     await mockDelay(700)
     const result = await db.query.issues.findMany({
@@ -78,4 +76,6 @@ export async function getIssues() {
     console.error('Error fetching issues:', error)
     throw new Error('Failed to fetch issues')
   }
-}
+}, ['issues'], {
+  tags: ['issues'],
+})
